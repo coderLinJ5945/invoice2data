@@ -1,24 +1,11 @@
-# Tutorial for template creation
+# 自定义模板创建教程
+1. 现有模板目录：[templates folder](https://github.com/invoice-x/invoice2data/tree/master/src/invoice2data/extract/templates) 
+2. `--template folder`选项，指向您自己的新模板文件。
+3. 
 
-A template defines which data attributes you wish to retrieve from an
-invoice. Each template should work on all invoices of a company or
-subsidiary (e.g. Amazon Germany vs Amazon US).
+## 简单发票模板
 
-Adding templates is easy and shouldn't take longer than adding 2-3
-invoices by hand. We use a simple YAML or json-format. Many options are optional
-and you just need them to take care of edge cases.
-
-Existing templates can be found in the [templates folder](https://github.com/invoice-x/invoice2data/tree/master/src/invoice2data/extract/templates) of the installed
-package under `/invoice2data/extract/templates`. You can use the
-`--template-folder` option to point to your own, new template files. If
-you add or improve templates that could be useful for everyone, we
-encourage you to file a pull request to the main repo, so everyone can
-use it.
-
-## Simple invoice template
-
-Here is a sample of a minimal invoice template to read invoices issued
-by Microsoft Hong Kong:
+以下是用于读取已开具发票的最小发票模板的示例 微软香港:
 
     issuer: Microsoft Regional Sales Corporation
     keywords:
@@ -39,48 +26,39 @@ by Microsoft Hong Kong:
 
 Let's look at each field:
 
-- `issuer`: The name of the invoice issuer. Can have the company name and country.
-- `keywords`: Also a required field. These are used to pick the
-   correct template. Be as specific as possible. As we add more
-   templates, we need to avoid duplicate matches. Using the VAT number,
-   email, website, phone, etc are generally good choices. ALL keywords
-   need to match to use the template.
-   These keywords are regex patterns, so 'Company US' and 'Company\s+US' both work.
-   This also allows some flexibility as 'Company\s+(US|UK)' will match on both
-   Company US and Company UK.
-- `exclude_keywords`: Optional field. These are used to exclude invoices.
-   These are regex patterns which, if any match, will exclude a template from
-   being used.
+- `issuer`: 必填字段，发票开具方名称。可以包含公司名称及其所在国家
+- `keywords`: 必填字段， 关键字，用于匹配合适的template模板的。尽可能具体一些。通常使用：增值税号 ,
+   email, website, phone, etc are generally good choices. 
+   注意：
+   1. 所有关键词都必须匹配才能应用该模板！！！
+   2. 这些关键字是使用正则表达式模式，提高了灵活性！！！例如： 'Company US' and 'Company\s+(US|UK)'
+- `exclude_keywords`: 可选，用于排除某些发票中的. 如果其中任何一个关键词（作为正则表达式模式）与发票内容匹配，则此模板将不会被采用！
 
-### Fields
+### Fields：本部分定义了应从发票中提取哪些信息（字段）以及如何提取！！！（重要）
 
-This section defines what information (fields) should be extracted from
-invoice and how.
+每个字段的定义方式可以有以下三种:
 
-Each field can be defined as:
+- an **associative array（关联数组）** ：
+  1. `parser` (required) 用于指定解析方法的；
+  2.  `area` (optional) 用于指定PDF文件中待搜索区域的位置。 
+   该参数接受以下参数值: `f` (起始页码), `l` (结束页码), `x` (top-left x-coord：左上角X坐标), `y` (top-left y-coord：左上角Y坐标), 
+  `r` (resolution：分辨率), `W` (width in pixels：宽度像素数) and `H` (height in pixels：高度像素数). 
+   注意：在设置搜索区域时，请确保您所使用的图像编辑器中的分辨率与在此选项中为`r`设定的分辨率一致。否则定位可能无法准确对齐。
+- 单个正则表达式（single regex），且包含一个捕获组（capturing group）
+- 正则表达式数组（an array of regexes）
 
-- an **associative array** with 
-`parser` (required) specifying parsing method and 
-`area` (optional) specifying the region of the pdf to search. 
-This takes the following arguments: `f` (first page), `l` (last page), `x` (top-left x-coord), `y` (top-left y-coord), 
-`r` (resolution), `W` (width in pixels) and `H` (height in pixels). When setting your region, ensure the resolution in your 
-image editor matches the resolution specified for `r` in this option. If not, it will not line up properly.
-- a single regex with one capturing group
-- an array of regexes
+首选第一种 **associative array（关联数组）** 的方法，因为它使得模板语法更为整洁、灵活，并旨在逐步替代旧的定义方式
 
-The first method is preferred. It was introduced to make templates
-syntax cleaner and more flexible. It aims to replace old methods.
+每一个template模板的必填字段： `amount`（金额）、`date`（日期）和 `invoice_number`（发票号码）这三个字段。
+根据需要，还可以提取更多的其他字段。
 
-Every template must specify at least `amount`, `date` and
-`invoice_number` fields. More fields can be extracted as required.
 
-Standard fields:
-
-- `date`: the date invoice was issued
-- `invoice_number`: unique number assigned to invoice by an issuer
-- `amount`: total amount (with taxes)
-- `vat`: [VAT identification number](https://en.wikipedia.org/wiki/VAT_identification_number)
-- `tax_lines`: [structure](#tax_lines) containing detailed tax information
+标准字段:
+- `date`: 发票开具日期，即发票上标注的该发票正式生成的具体日期。
+- `invoice_number`: 发票号码，由开票方赋予每张发票的一个唯一编号，用于标识和追踪每笔交易。
+- `amount`: 总金额，通常指发票上的总金额（含税）。
+- `vat`: 增值税识别号 [VAT identification number](https://en.wikipedia.org/wiki/VAT_identification_number)
+- `tax_lines`: 结构化数据，包含了详细的税务信息，可能涉及各项税率、税额以及不同类别的税收明细 [structure](#tax_lines) 
 
 ### Parser `regex`
 
