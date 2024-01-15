@@ -1,3 +1,18 @@
+# 核心使用备注：
+一、自定义模板文件的使用参考：
+1. 自定义发票，需要按照要求编写发票模板的yml文件，并放入到自定义的模板文件目录中，默认目录为：invoice2data/extract/templates/
+2. 代码使用示例：
+    ```
+    from invoice2data import extract_data
+    from invoice2data.extract.loader import read_templates
+    # 读取模板集合，暂时没搞懂，为什么可以通过模板集合进行多类型的匹配
+    tempfile = read_templates("/home/work/study/linj/OCR/tesseract-ocr/invoice2data-master/src/invoice2data/extract/templates/")
+    # 返回映射结果
+    result = extract_data("/home/work/study/linj/OCR/tesseract-ocr/invoice2data-master/tests/compare/oyo.pdf", templates=tempfile)
+    print(result)
+    ```
+3. yml添加新模板参考：TUTORIAL.md文件
+
 # Data extractor for PDF invoices - invoice2data
 
 [![invoice2data build status on GitHub Actions](https://github.com/invoice-x/invoice2data/workflows/Test/badge.svg)](https://github.com/invoice-x/invoice2data/actions)
